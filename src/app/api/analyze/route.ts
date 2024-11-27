@@ -8,7 +8,7 @@ const anthropic = new Anthropic({
 
 export async function POST(request: Request) {
   try {
-    const { taskDescription } = await request.json();
+    const { taskDescription, model } = await request.json();
 
     if (!taskDescription) {
       return NextResponse.json(
@@ -17,30 +17,52 @@ export async function POST(request: Request) {
       );
     }
 
-    const message:any = await anthropic.messages.create({
-      model: 'claude-3-opus-20240229',
+    const modelMapping = {
+      'claude-3-5-haiku': 'claude-3-5-haiku-latest',
+      'claude-3-5-sonnet': 'claude-3-5-sonnet-latest',
+      'claude-3-opus': 'claude-3-opus-latest'
+    };
+
+    const mappedModel = modelMapping[model as keyof typeof modelMapping] || model;
+
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const formattedFirstDay = firstDayOfMonth.toISOString().split('T')[0];
+    const formattedToday = today.toISOString().split('T')[0];
+
+    const message: any = await anthropic.messages.create({
+      model: mappedModel,
       max_tokens: 4096,
       messages: [{
         role: 'user',
-        content: `Analyze these tasks and distribute timespent to each day from November 1 to November 25 for every weekday with minimum 8 hours and current status. Data for analyze: ${taskDescription}. 
-        Provide a detailed breakdown of tasks per day.
+        content: `Analyze these tasks and distribute timespent to each day from ${formattedFirstDay} to ${formattedToday} for every weekday with minimum 8 hours and current status. Data for analyze: ${taskDescription}. 
+        Provide a detailed breakdown of tasks per day. For the taks with workTitle "Coffee Morning..." make default 30 minutes.
         Respond ONLY with a JSON array in this exact format, no other text: 
         [{ "day": "YYYY-MM-DD", "tasks": [{ "workTitle": "task name", "timeSpent": number, "status": "In Progress" or "Completed" }] }]`
       }]
     });
 
-    // Extract JSON from the response text by finding the first [ and last ]
     const text = message.content[0].text;
-    const jsonStart = text.indexOf('[');
-    const jsonEnd = text.lastIndexOf(']') + 1;
-    const jsonStr = text.slice(jsonStart, jsonEnd);
-    
-    const dailyTasks = JSON.parse(jsonStr) as DailyTasks[];
-    
+
+    if (!text.includes('[') || !text.includes(']')) {
+      return NextResponse.json(
+        {
+          error: 'Invalid input',
+          feedback: text.split('\n').filter((line: string) => line.trim()) // Clean up the feedback
+        },
+        { status: 422 }
+      );
+    }
+
+    const jsonStart = text?.indexOf('[');
+    const jsonEnd = text?.lastIndexOf(']');
+    const jsonStr = text?.slice(jsonStart, jsonEnd + 1);
+    const dailyTasks = JSON.parse(jsonStr!) as DailyTasks[];
+
     // Calculate total time spent and overall status
     let totalTimeSpent = 0;
     let hasInProgress = false;
-    
+
     dailyTasks.forEach(day => {
       day.tasks.forEach(task => {
         totalTimeSpent += task.timeSpent;

@@ -1,13 +1,13 @@
 import { TaskAnalysis } from '../types';
 
-export async function analyzeTask(taskDescription: string): Promise<TaskAnalysis> {
+export async function analyzeTask(taskDescription: string, model: string): Promise<TaskAnalysis> {
   try {
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ taskDescription }),
+      body: JSON.stringify({ taskDescription, model }),
     });
 
     if (!response.ok) {

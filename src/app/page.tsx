@@ -15,6 +15,8 @@ export default function Home() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const taskDescription = formData.get('taskDescription') as string;
+    const model = formData.get('model') as string;
+
 
     if (!taskDescription.trim()) {
       setError('Please enter a task description');
@@ -25,7 +27,7 @@ export default function Home() {
     setError('');
 
     try {
-      const result = await analyzeTask(taskDescription);
+      const result = await analyzeTask(taskDescription, model);
       setAnalysis(result);
       (e.target as HTMLFormElement).reset();
     } catch (err) {
@@ -55,10 +57,26 @@ export default function Home() {
               id="taskDescription"
               name="taskDescription"
               rows={3}
-              className="mt-1 py-2 px-3 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="mt-1 py-2 px-3 block w-full rounded-lg border-gray-300 text-sm font-semibold shadow-sm text-black focus:border-indigo-500 focus:ring-indigo-500"
               placeholder="Enter your task description here..."
               disabled={isLoading}
             />
+            <div>
+              <label htmlFor="model" className="block text-sm font-medium text-gray-700">
+                Model
+              </label>
+              <select
+                id="model"
+                name="model"
+                className="mt-1 block w-full py-2 px-3 text-black border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                disabled={isLoading}
+              >
+                <option value="claude-3-5-haiku" defaultChecked>Claude-3-5-Haiku</option>
+                <option value="claude-3-5-sonnet">Claude-3-5-Sonnet</option>
+                <option value="claude-3-opus">Claude-3-Opus</option>
+              </select>
+            </div>
+
           </div>
 
           {error && (
