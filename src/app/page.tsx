@@ -23,6 +23,11 @@ export default function Home() {
       return;
     }
 
+    if(taskDescription.length < 500) {
+      setError('Task description must be at least 500 characters');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 

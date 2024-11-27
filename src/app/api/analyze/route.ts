@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       messages: [{
         role: 'user',
         content: `Analyze these tasks and distribute timespent to each day from ${formattedFirstDay} to ${formattedToday} for every weekday with minimum 8 hours and current status. Data for analyze: ${taskDescription}. 
-        Provide a detailed breakdown of tasks per day. For the taks with workTitle "Coffee Morning..." make default 30 minutes.
+        Provide a detailed breakdown of tasks per day. For the taks with workTitle starting with "Coffee Morning..." make default timespent 30 minutes.
         Respond ONLY with a JSON array in this exact format, no other text: 
         [{ "day": "YYYY-MM-DD", "tasks": [{ "workTitle": "task name", "timeSpent": number, "status": "In Progress" or "Completed" }] }]`
       }]
